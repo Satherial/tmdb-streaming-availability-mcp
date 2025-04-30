@@ -1,0 +1,19 @@
+{
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.10.2",
+    "node-fetch": "^3.3.2",
+    "streaming-availability": "^4.4.0",
+    "zod": "^3.24.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.3",
+    "@types/node-fetch": "^2.6.12",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  },
+  "scripts": {
+    "start": "node --loader ts-node/esm mcp-server.ts",
+    "build": "tsc"
+  },
+  "type": "module"
+}
