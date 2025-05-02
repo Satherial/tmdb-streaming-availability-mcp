@@ -72,14 +72,25 @@ const getStreamingAvailabilityInputSchema = z.object({
 const getStreamingAvailabilityOutputSchema = z.any(); // Streaming info can vary, so we leave as any
 
 // --- MCP server creation ---
-const server = new McpServer({
-  name: "TMDB and Streaming Availability",
-  version: "1.0.0",
-  capabilities: {
-    tools: {},
+const server = new McpServer(
+  {
+    name: "TMDB and Streaming Availability",
+    version: "1.0.0",
+    capabilities: {
+      tools: {},
+    },
+    // No tools array here; tools are registered below
   },
-  // No tools array here; tools are registered below
-});
+  {
+    capabilities: {
+      tools: {},
+    },
+    instructions: `
+  This server provides access to TMDB and streaming availability information.
+  You can use the tools to get movies, movie details, genres, and streaming availability.
+  `,
+  }
+);
 
 // Register get-movies tool
 server.tool(
@@ -201,7 +212,13 @@ server.tool(
 // Register get-genres tool
 server.tool(
   "get-genres",
-  "Retrieve the current list of all available movie genres directly from TMDB. No parameters required. Returns an array of genre objects with id and name. This tool always provides the latest genres from TMDB.",
+  `Returns a list of movie genres from TMDB. 
+  The tool returns a JSON object with a single property: 'genres'.
+  This is an array of objects, each with two fields:
+  - 'id' (an integer)
+  - 'name' (a string representing the genre name)
+
+  No input parameters are required. Always returns the most up-to-date genre list.`,
   {}, // No params
   async () => {
     console.error("[DEBUG] getGenres called with input: {} (no parameters)");
@@ -217,7 +234,12 @@ server.tool(
       console.error("[DEBUG] getGenres response:", JSON.stringify(data));
       return {
         content: [
-          { type: "text", text: JSON.stringify({ genres: data.genres }) },
+          {
+            type: "text",
+            text: JSON.stringify({
+              genres: data.genres,
+            }),
+          },
         ],
       };
     } catch (error) {
