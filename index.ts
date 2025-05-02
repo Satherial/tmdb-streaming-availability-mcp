@@ -19,7 +19,7 @@ const TMDB_BASE_URL = "https://api.themoviedb.org/3";
 const TMDB_IMAGE_BASE_URL = "https://image.tmdb.org/t/p/w500";
 
 // Log environment variable presence for debugging
-console.log("[DEBUG] Starting TMDB Streaming Availability MCP server...");
+console.error("[DEBUG] Starting TMDB Streaming Availability MCP server...");
 if (!TMDB_API_TOKEN) {
   console.error("[ERROR] TMDB_API_TOKEN is missing!");
 }
@@ -52,25 +52,25 @@ const createServer = () => {
         {
           name: "getMovies",
           description:
-            "Retrieve a list of movies from TMDB. Supports filtering by: sort (e.g., 'popularity.desc', 'release_date.desc', 'vote_average.desc'), yearFrom (start release year), yearTo (end release year), minRating (minimum vote average), and categories (array of genre IDs as strings). You can combine filters. Sorting is by 'popularity.desc' by default, but you can use any TMDB-supported sort key. Returns an array of movie objects with id, title, overview, poster, release date, rating, and categories.",
+            "Find and recommend movies directly from TMDB in real time. You can search for movies by genre name (e.g., 'action', 'comedy') and specify how many results you want (e.g., 'find 5 action movies'). Supports filtering by: sort (e.g., 'popularity.desc', 'release_date.desc', 'vote_average.desc'), yearFrom (start release year), yearTo (end release year), minRating (minimum vote average), and categories (array of genre IDs as strings). You can combine filters. Sorting is by 'popularity.desc' by default, but you can use any TMDB-supported sort key. The tool will automatically map genre names to IDs and limit the number of results if requested. Returns an array of movie objects with id, title, overview, poster, release date, rating, and categories. This tool has direct access to TMDB and always provides up-to-date results.",
           inputSchema: zodToJsonSchema(z.object(getMoviesSchema)),
         },
         {
           name: "getMovieDetail",
           description:
-            "Fetch detailed information for a specific movie by its TMDB ID. Returns fields such as title, overview, year, rating, images, genres, director, duration, language, and release date.",
+            "Fetch live, detailed information for a specific movie by its TMDB ID. This tool has direct access to TMDB and returns real-time fields such as title, overview, year, rating, images, genres, director, duration, language, and release date.",
           inputSchema: zodToJsonSchema(z.object(getMovieDetailSchema)),
         },
         {
           name: "getGenres",
           description:
-            "Get a list of all available movie genres from TMDB. No parameters required. Returns an array of genre objects with id and name.",
+            "Retrieve the current list of all available movie genres directly from TMDB. No parameters required. Returns an array of genre objects with id and name. This tool always provides the latest genres from TMDB.",
           inputSchema: zodToJsonSchema(z.object(getGenresSchema)),
         },
         {
           name: "getStreamingAvailability",
           description:
-            "Check streaming availability for a movie by TMDB ID and country code. Parameters: id (required, TMDB movie ID), country (optional, two-letter ISO 3166-1 alpha-2 code, e.g., 'us', 'gb'; defaults to 'us' if not provided). Returns streaming provider information and availability details for the specified country, including platforms where the movie can be watched online.",
+            "Check real-time streaming availability for a movie by TMDB ID and country code. This tool uses TMDB IDs and provides up-to-date streaming provider information and availability details for the specified country, including platforms where the movie can be watched online.",
           inputSchema: zodToJsonSchema(
             z.object(getStreamingAvailabilitySchema)
           ),
@@ -85,7 +85,7 @@ const createServer = () => {
   );
 
   // Log tool registration
-  console.log(
+  console.error(
     "[DEBUG] Registering tools: getMovies, getMovieDetail, getGenres, getStreamingAvailability"
   );
 
@@ -99,14 +99,9 @@ const createServer = () => {
       minRating: z.number().optional(),
       categories: z.array(z.string()).optional(),
     },
-    async ({ sort, yearFrom, yearTo, minRating, categories }) => {
-      console.log("[DEBUG] getMovies called", {
-        sort,
-        yearFrom,
-        yearTo,
-        minRating,
-        categories,
-      });
+    async (args) => {
+      const { sort, yearFrom, yearTo, minRating, categories } = args;
+      console.log("[DEBUG] getMovies called with input:", JSON.stringify(args));
       try {
         // Build query params for TMDB API
         const queryParams = new URLSearchParams({
@@ -146,7 +141,7 @@ const createServer = () => {
           voteAverage: movie.vote_average,
           categories: movie.genre_ids,
         }));
-        return {
+        const output: any = {
           content: [
             {
               type: "text",
@@ -154,6 +149,8 @@ const createServer = () => {
             },
           ],
         };
+        console.log("[DEBUG] getMovies output:", JSON.stringify(output));
+        return output;
       } catch (error) {
         console.error("[ERROR] getMovies failed:", error);
         throw error;
@@ -162,8 +159,12 @@ const createServer = () => {
   );
 
   // --- Tool: getMovieDetail ---
-  server.tool("getMovieDetail", { id: z.number() }, async ({ id }) => {
-    console.log("[DEBUG] getMovieDetail called", { id });
+  server.tool("getMovieDetail", { id: z.number() }, async (args, extra) => {
+    const { id } = args;
+    console.log(
+      "[DEBUG] getMovieDetail called with input:",
+      JSON.stringify(args)
+    );
     try {
       if (!id) throw new Error("Movie ID required");
       const res = await fetch(`${TMDB_BASE_URL}/movie/${id}`, {
@@ -191,7 +192,7 @@ const createServer = () => {
         language: movie.original_language,
         releaseDate: movie.release_date,
       };
-      return {
+      const output: any = {
         content: [
           {
             type: "text",
@@ -199,6 +200,8 @@ const createServer = () => {
           },
         ],
       };
+      console.log("[DEBUG] getMovieDetail output:", JSON.stringify(output));
+      return output;
     } catch (error) {
       console.error("[ERROR] getMovieDetail failed:", error);
       throw error;
@@ -207,7 +210,7 @@ const createServer = () => {
 
   // --- Tool: getGenres ---
   server.tool("getGenres", {}, async () => {
-    console.log("[DEBUG] getGenres called");
+    console.log("[DEBUG] getGenres called with input: {} (no parameters)");
     try {
       const res = await fetch(`${TMDB_BASE_URL}/genre/movie/list`, {
         headers: {
@@ -217,7 +220,7 @@ const createServer = () => {
       });
       if (!res.ok) throw new Error(`TMDB error: ${res.status}`);
       const data = (await res.json()) as { genres: any[] };
-      return {
+      const output: any = {
         content: [
           {
             type: "text",
@@ -225,6 +228,8 @@ const createServer = () => {
           },
         ],
       };
+      console.log("[DEBUG] getGenres output:", JSON.stringify(output));
+      return output;
     } catch (error) {
       console.error("[ERROR] getGenres failed:", error);
       throw error;
@@ -238,8 +243,12 @@ const createServer = () => {
       id: z.number(),
       country: z.string().optional(),
     },
-    async ({ id, country }) => {
-      console.log("[DEBUG] getStreamingAvailability called", { id, country });
+    async (args) => {
+      const { id, country } = args;
+      console.log(
+        "[DEBUG] getStreamingAvailability called with input:",
+        JSON.stringify(args)
+      );
       try {
         const countryCode = (country || "us").toLowerCase();
         if (!id) throw new Error("Movie ID required");
@@ -257,7 +266,7 @@ const createServer = () => {
           id: formattedId,
           country: countryCode,
         });
-        return {
+        const output: any = {
           content: [
             {
               type: "text",
@@ -265,6 +274,11 @@ const createServer = () => {
             },
           ],
         };
+        console.log(
+          "[DEBUG] getStreamingAvailability output:",
+          JSON.stringify(output)
+        );
+        return output;
       } catch (error) {
         console.error("[ERROR] getStreamingAvailability failed:", error);
         throw error;
@@ -281,7 +295,7 @@ async function main() {
 
   try {
     await server.connect(transport);
-    console.log("[DEBUG] MCP server connected and running.");
+    console.error("[DEBUG] MCP server connected and running.");
   } catch (error) {
     console.error("[ERROR] MCP server failed to start:", error);
     process.exit(1);
@@ -289,7 +303,7 @@ async function main() {
 
   // Cleanup on exit
   process.on("SIGINT", async () => {
-    console.log("[DEBUG] SIGINT received, shutting down server...");
+    console.error("[DEBUG] SIGINT received, shutting down server...");
     await server.close();
     process.exit(0);
   });

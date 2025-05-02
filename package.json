@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.10.2",
+    "@modelcontextprotocol/sdk": "^1.11.0",
     "node-fetch": "^3.3.2",
     "streaming-availability": "^4.4.0",
     "zod": "^3.24.3"
