@@ -6,8 +6,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import * as streamingAvailability from "streaming-availability";
 import fetch from "node-fetch";
-import { z, infer as zInfer } from "zod";
-// @ts-ignore
+import { z } from "zod";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 
 // --- Configurazione ambiente ---
@@ -71,9 +70,6 @@ const getStreamingAvailabilityInputSchema = z.object({
   country: z.string().optional(),
 });
 const getStreamingAvailabilityOutputSchema = z.any(); // Streaming info può variare, lasciamo any
-
-// --- Definizione dei tool ---
-// (Removed tools array, now registering each tool individually below)
 
 // --- Creazione server MCP ---
 const server = new McpServer({
