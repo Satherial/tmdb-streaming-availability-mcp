@@ -81,10 +81,12 @@ const server = new McpServer({
   // No tools array here; tools are registered below
 });
 
-// Register getMovies tool
+// Register get-movies tool
 server.tool(
-  "getMovies",
-  "Find and recommend movies directly from TMDB in real time. You can search for movies by genre name (e.g., 'action', 'comedy') and specify how many results you want (e.g., 'find 5 action movies'). Supports filtering by: sort (e.g., 'popularity.desc', 'release_date.desc', 'vote_average.desc'), yearFrom (start release year), yearTo (end release year), minRating (minimum vote average), and categories (array of genre IDs as strings). You can combine filters. Sorting is by 'popularity.desc' by default, but you can use any TMDB-supported sort key. The tool will automatically map genre names to IDs and limit the number of results if requested. Returns an array of movie objects with id, title, overview, poster, release date, rating, and categories. This tool has direct access to TMDB and always provides up-to-date results.",
+  "get-movies",
+  // Updated description to list all TMDB-supported sort options for clarity.
+  // This helps users know exactly what sorting is available.
+  "Find and recommend movies directly from TMDB in real time. You can search for movies by genre name (e.g., 'action', 'comedy') and specify how many results you want (e.g., 'find 5 action movies'). Supports filtering by: sort (e.g., 'popularity.desc', 'release_date.desc', 'vote_average.desc'), yearFrom (start release year), yearTo (end release year), minRating (minimum vote average), and categories (array of genre IDs as strings). You can combine filters.\n\nSorting is by 'popularity.desc' by default, but you can use any of these TMDB-supported sort keys: 'popularity.asc', 'popularity.desc', 'release_date.asc', 'release_date.desc', 'revenue.asc', 'revenue.desc', 'primary_release_date.asc', 'primary_release_date.desc', 'original_title.asc', 'original_title.desc', 'vote_average.asc', 'vote_average.desc', 'vote_count.asc', 'vote_count.desc'.\n\nThe tool will automatically map genre names to IDs and limit the number of results if requested. Returns an array of movie objects with id, title, overview, poster, release date, rating, and categories. This tool has direct access to TMDB and always provides up-to-date results.",
   {
     sort: z.string().optional(),
     yearFrom: z.string().optional(),
@@ -94,7 +96,7 @@ server.tool(
   },
   async (args) => {
     const { sort, yearFrom, yearTo, minRating, categories } = args;
-    console.log("[DEBUG] getMovies called with input:", JSON.stringify(args));
+    console.error("[DEBUG] getMovies called with input:", JSON.stringify(args));
     try {
       const queryParams = new URLSearchParams({
         include_adult: "false",
@@ -132,7 +134,7 @@ server.tool(
         voteAverage: movie.vote_average,
         categories: movie.genre_ids,
       }));
-      console.log("[DEBUG] getMovies response:", JSON.stringify(movies));
+      console.error("[DEBUG] getMovies response:", JSON.stringify(movies));
       // MCP expects { content: [...] }
       return {
         content: [
@@ -149,14 +151,14 @@ server.tool(
   }
 );
 
-// Register getMovieDetail tool
+// Register get-movie-detail tool
 server.tool(
-  "getMovieDetail",
+  "get-movie-detail",
   "Fetch live, detailed information for a specific movie by its TMDB ID. This tool has direct access to TMDB and returns real-time fields such as title, overview, year, rating, images, genres, director, duration, language, and release date.",
   { id: z.number() },
   async (args) => {
     const { id } = args;
-    console.log(
+    console.error(
       "[DEBUG] getMovieDetail called with input:",
       JSON.stringify(args)
     );
@@ -170,7 +172,7 @@ server.tool(
       });
       if (!res.ok) throw new Error(`TMDB error: ${res.status}`);
       const movie = (await res.json()) as any;
-      console.log("[DEBUG] getMovieDetail response:", JSON.stringify(movie));
+      console.error("[DEBUG] getMovieDetail response:", JSON.stringify(movie));
       const result = {
         id: movie.id,
         title: movie.title,
@@ -196,13 +198,13 @@ server.tool(
   }
 );
 
-// Register getGenres tool
+// Register get-genres tool
 server.tool(
-  "getGenres",
+  "get-genres",
   "Retrieve the current list of all available movie genres directly from TMDB. No parameters required. Returns an array of genre objects with id and name. This tool always provides the latest genres from TMDB.",
   {}, // No params
   async () => {
-    console.log("[DEBUG] getGenres called with input: {} (no parameters)");
+    console.error("[DEBUG] getGenres called with input: {} (no parameters)");
     try {
       const res = await fetch(`${TMDB_BASE_URL}/genre/movie/list`, {
         headers: {
@@ -212,7 +214,7 @@ server.tool(
       });
       if (!res.ok) throw new Error(`TMDB error: ${res.status}`);
       const data = (await res.json()) as { genres: any[] };
-      console.log("[DEBUG] getGenres response:", JSON.stringify(data));
+      console.error("[DEBUG] getGenres response:", JSON.stringify(data));
       return {
         content: [
           { type: "text", text: JSON.stringify({ genres: data.genres }) },
@@ -225,9 +227,9 @@ server.tool(
   }
 );
 
-// Register getStreamingAvailability tool
+// Register get-streaming-availability tool
 server.tool(
-  "getStreamingAvailability",
+  "get-streaming-availability",
   "Check real-time streaming availability for a movie by TMDB ID and country code. This tool uses TMDB IDs and provides up-to-date streaming provider information and availability details for the specified country, including platforms where the movie can be watched online.",
   {
     id: z.number(),
@@ -235,7 +237,7 @@ server.tool(
   },
   async (args) => {
     const { id, country } = args;
-    console.log(
+    console.error(
       "[DEBUG] getStreamingAvailability called with input:",
       JSON.stringify(args)
     );
@@ -255,7 +257,7 @@ server.tool(
         id: formattedId,
         country: countryCode,
       });
-      console.log(
+      console.error(
         "[DEBUG] getStreamingAvailability response:",
         JSON.stringify(streamingInfo)
       );
