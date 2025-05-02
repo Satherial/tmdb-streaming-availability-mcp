@@ -98,6 +98,20 @@ Claude Desktop will now recognize and use your local MCP server as a tool.
 - Check the terminal for errors if the server does not start or connect.
 - If you change the code, restart the server and reload the tool in Claude Desktop.
 
+## Debugging with MCP Inspector
+
+You can debug and inspect your MCP server using the [MCP Inspector](https://www.npmjs.com/package/@modelcontextprotocol/inspector). This tool helps you visualize and debug MCP tool calls in real time.
+
+To start your server with the inspector, run:
+
+```
+npx @modelcontextprotocol/inspector node /Users/davidedispenza/workspace/tmdb-streaming-availability-mcp/build/index.js
+```
+
+This will launch the inspector interface, allowing you to monitor requests and responses between Claude Desktop and your MCP server.
+
+If you encounter issues, use this tool to help diagnose problems with tool calls or server behavior.
+
 ## License
 
 MIT

@@ -1,15 +1,15 @@
 // MCP Server for TMDB Streaming Availability
-// Nuova struttura: tool come oggetti, outputSchema obbligatorio, handler async, capabilities su onClientConnect
-// Usa SSEServerTransport e server.listen
+// New structure: tools as objects, outputSchema required, async handler, capabilities on onClientConnect
+// Uses SSEServerTransport and server.listen
 
-// Verifica che '@modelcontextprotocol/sdk' sia installato e abbia i tipi corretti
+// Check that '@modelcontextprotocol/sdk' is installed and has the correct types
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import * as streamingAvailability from "streaming-availability";
 import fetch from "node-fetch";
 import { z } from "zod";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 
-// --- Configurazione ambiente ---
+// --- Environment configuration ---
 const TMDB_API_TOKEN = process.env.TMDB_API_TOKEN;
 const TMDB_BASE_URL = "https://api.themoviedb.org/3";
 const TMDB_IMAGE_BASE_URL = "https://image.tmdb.org/t/p/w500";
@@ -22,7 +22,7 @@ if (!process.env.RAPID_API_KEY) {
   console.error("[ERROR] RAPID_API_KEY is missing!");
 }
 
-// --- Schemi Zod per input/output ---
+// --- Zod schemas for input/output ---
 const getMoviesInputSchema = z.object({
   sort: z.string().optional(),
   yearFrom: z.string().optional(),
@@ -69,9 +69,9 @@ const getStreamingAvailabilityInputSchema = z.object({
   id: z.number(),
   country: z.string().optional(),
 });
-const getStreamingAvailabilityOutputSchema = z.any(); // Streaming info può variare, lasciamo any
+const getStreamingAvailabilityOutputSchema = z.any(); // Streaming info can vary, so we leave as any
 
-// --- Creazione server MCP ---
+// --- MCP server creation ---
 const server = new McpServer({
   name: "TMDB and Streaming Availability",
   version: "1.0.0",
@@ -271,9 +271,9 @@ server.tool(
   }
 );
 
-// --- Avvio server MCP secondo la guida ufficiale (stdio transport) ---
+// --- Start MCP server according to the official guide (stdio transport) ---
 async function main() {
-  // Usa il transport stdio, raccomandato per Claude Desktop/local
+  // Use stdio transport, recommended for Claude Desktop/local
   const transport = new StdioServerTransport();
   try {
     await server.connect(transport);
@@ -284,7 +284,7 @@ async function main() {
     console.error("[ERROR] MCP server failed to start:", error);
     process.exit(1);
   }
-  // Gestione shutdown pulito
+  // Clean shutdown handling
   process.on("SIGINT", async () => {
     console.error("[DEBUG] SIGINT received, shutting down server...");
     await server.close();
